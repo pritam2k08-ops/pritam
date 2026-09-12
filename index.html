@@ -1571,8 +1571,10 @@ html body .lightbox#posterLightbox .lightbox-inner img{
 <div class="ad-card video-template ad-video-card vimeo-video-card">
 <div class="vimeo-video-container">
 <img alt="Video thumbnail" class="vimeo-frame-thumbnail" draggable="false" src="https://ik.imagekit.io/eav63my6z/file_0000000037688210b91f9183c9cc22a9.png"/><div aria-label="Loading video" class="video-loading-indicator"></div>
-<iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="" frameborder="0" id="firstVimeoPlayer" src="https://player.vimeo.com/video/1225498016?api=1&amp;autoplay=0&amp;controls=0&amp;title=0&amp;byline=0&amp;portrait=0&amp;playsinline=1&amp;dnt=1" title="Vimeo video player">
-</iframe>
+<video id="firstNativePortfolioVideo" playsinline preload="metadata" poster="https://ik.imagekit.io/eav63my6z/file_0000000037688210b91f9183c9cc22a9.png" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block;background:#000;z-index:10;opacity:0;transition:opacity .22s ease;">
+  <source src="videos/1000047238.mp4" type="video/mp4">
+  Your browser does not support HTML5 video.
+</video>
 <div aria-hidden="true" class="custom-vimeo-click-layer"></div>
 <button aria-label="Play video" class="custom-vimeo-play" type="button">
 <svg aria-hidden="true" class="play-icon" viewbox="0 0 24 24"><path d="M9 5.5v13L19 12 9 5.5z"></path></svg>
@@ -1648,7 +1650,7 @@ html body .lightbox#posterLightbox .lightbox-inner img{
 <div class="vimeo-video-container">
 <img alt="Video thumbnail" class="vimeo-frame-thumbnail" draggable="false" src="https://ik.imagekit.io/eav63my6z/file_00000000847c8211bc4a16ca779390a4.png"/>
 <div aria-label="Loading video" class="video-loading-indicator"></div>
-<iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="" frameborder="0" id="fifthVimeoPlayer" src="https://player.vimeo.com/video/1223248192?api=1&amp;autoplay=0&amp;controls=0&amp;title=0&amp;byline=0&amp;portrait=0&amp;playsinline=1&amp;dnt=1" title="Vimeo video player"></iframe>
+<iframe allow="autoplay; fullscreen; picture-in-picture" allowfullscreen="" frameborder="0" id="fifthVimeoPlayer" src="https://www.youtube.com/embed/CQNqTb28KvA?autoplay=0&playsinline=1&rel=0&modestbranding=1" title="Vimeo video player"></iframe>
 <div aria-hidden="true" class="custom-vimeo-click-layer"></div>
 <button aria-label="Play video" class="custom-vimeo-play" type="button">
 <svg aria-hidden="true" class="play-icon" viewbox="0 0 24 24"><path d="M9 5.5v13L19 12 9 5.5z"></path></svg>
@@ -2779,6 +2781,122 @@ body.video-only-fullscreen-open::before{display:none!important;content:none!impo
     })(window.location);
   </script>
 <!-- ==================== END OF ADDED REDIRECT SCRIPT ==================== -->
+
+<script id="first-native-video-controller">
+(function(){
+  function init(){
+    const card=document.querySelector('.vimeo-video-card');
+    const video=document.getElementById('firstNativePortfolioVideo');
+    if(!card||!video||card.dataset.nativeFirstReady==='1') return;
+    card.dataset.nativeFirstReady='1';
+    const thumb=card.querySelector('.vimeo-frame-thumbnail');
+    const layer=card.querySelector('.custom-vimeo-click-layer');
+    const center=card.querySelector('.custom-vimeo-play');
+    const controls=card.querySelector('.custom-vimeo-controls');
+    const progress=card.querySelector('.custom-vimeo-progress');
+    const fill=card.querySelector('.custom-vimeo-progress-fill');
+    const fullscreen=card.querySelector('.custom-vimeo-fullscreen');
+    const loader=card.querySelector('.video-loading-indicator');
+    const replay=card.querySelector('.custom-vimeo-replay');
+
+    function showControls(){
+      controls.classList.remove('is-hidden-controls');
+      controls.classList.add('is-visible-controls');
+      center.classList.remove('is-hidden');
+      center.classList.add('is-controls-visible');
+    }
+    function hideControls(){
+      controls.classList.add('is-hidden-controls');
+      controls.classList.remove('is-visible-controls');
+      if(!video.paused) center.classList.add('is-hidden');
+    }
+    function updateProgress(){
+      const pct=video.duration ? (video.currentTime/video.duration)*100 : 0;
+      fill.style.width=Math.max(0,Math.min(100,pct))+'%';
+      progress.setAttribute('aria-valuenow',pct.toFixed(1));
+    }
+    function syncButton(){
+      center.classList.toggle('is-playing',!video.paused && !video.ended);
+      center.classList.toggle('is-paused',video.paused || video.ended);
+      if(video.paused || video.ended){ center.classList.remove('is-hidden'); }
+      else { center.classList.add('is-hidden'); }
+    }
+    function play(){
+      if(loader) loader.classList.add('is-loading');
+      video.play().catch(function(){ if(loader) loader.classList.remove('is-loading'); });
+    }
+    function pause(){ video.pause(); }
+
+    center.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(video.ended){ video.currentTime=0; replay.classList.remove('is-visible'); }
+      if(video.paused) play(); else pause();
+    });
+    layer.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(video.paused) play();
+      else if(controls.classList.contains('is-hidden-controls')) showControls();
+      else hideControls();
+    });
+    progress.addEventListener('pointerdown',function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(!video.duration) return;
+      const r=progress.getBoundingClientRect();
+      const pct=Math.max(0,Math.min(1,(e.clientX-r.left)/r.width));
+      video.currentTime=pct*video.duration;
+      showControls();
+    });
+    fullscreen.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
+      if(video.requestFullscreen) video.requestFullscreen();
+      else if(video.webkitEnterFullscreen) video.webkitEnterFullscreen();
+    });
+    if(replay) replay.addEventListener('click',function(e){
+      e.preventDefault(); e.stopPropagation();
+      video.currentTime=0; replay.classList.remove('is-visible'); play();
+    });
+    video.addEventListener('loadstart',function(){ if(loader) loader.classList.add('is-loading'); });
+    video.addEventListener('canplay',function(){ if(loader) loader.classList.remove('is-loading'); });
+    video.addEventListener('playing',function(){
+      if(loader) loader.classList.remove('is-loading');
+      video.style.opacity='1';
+      if(thumb) thumb.classList.add('is-hidden');
+      card.classList.add('is-vimeo-playing');
+      hideControls(); syncButton();
+    });
+    video.addEventListener('pause',function(){
+      if(loader) loader.classList.remove('is-loading');
+      card.classList.remove('is-vimeo-playing');
+      center.classList.remove('is-hidden');
+      center.classList.add('is-paused');
+      syncButton();
+    });
+    video.addEventListener('timeupdate',updateProgress);
+    video.addEventListener('ended',function(){
+      if(loader) loader.classList.remove('is-loading');
+      card.classList.remove('is-vimeo-playing');
+      center.classList.remove('is-hidden','is-playing');
+      center.classList.add('is-paused');
+      controls.classList.remove('is-hidden-controls');
+      controls.classList.add('is-visible-controls');
+      fill.style.width='100%';
+      progress.setAttribute('aria-valuenow','100');
+      if(replay) replay.classList.add('is-visible');
+      if(thumb) thumb.classList.remove('is-hidden');
+    });
+    video.addEventListener('error',function(){
+      if(loader) loader.classList.remove('is-loading');
+      video.style.opacity='0';
+      if(thumb) thumb.classList.remove('is-hidden');
+    });
+    syncButton();
+    hideControls();
+  }
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',init,{once:true});
+  else init();
+})();
+</script>
+
 </body>
 
 <!-- FIX: remove automatic scale/minimize-maximize behavior during page scrolling -->
